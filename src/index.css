@@ -1,0 +1,308 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+/* ============================================
+   ANTARCTIC INTELLIGENCE COMMAND CENTER
+   Dark Navy + Ice Blue Design System
+   ============================================ */
+
+:root {
+  --navy-900: #0a0e1a;
+  --navy-800: #0f1526;
+  --navy-700: #141c32;
+  --navy-600: #1a2540;
+  --navy-500: #243050;
+  --navy-400: #2d3b5e;
+  --ice-50: #e8f4f8;
+  --ice-100: #b8dfe9;
+  --ice-200: #88cada;
+  --ice-300: #5bb5cb;
+  --ice-400: #38a0bc;
+  --ice-500: #1a8bac;
+  --ice-600: #0d7a9e;
+  --cyan-glow: rgba(56, 189, 248, 0.15);
+  --teal-accent: #0ea5e9;
+  --risk-safe: #22c55e;
+  --risk-moderate: #f59e0b;
+  --risk-high: #f97316;
+  --risk-critical: #ef4444;
+  --glass-bg: rgba(15, 21, 38, 0.85);
+  --glass-border: rgba(56, 189, 248, 0.12);
+  --card-bg: rgba(20, 28, 50, 0.9);
+  --card-border: rgba(56, 189, 248, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--navy-900);
+  color: #e2e8f0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============ SCROLLBAR ============ */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.2);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.4);
+}
+
+/* ============ GLASS CARDS ============ */
+.glass-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+}
+
+.glass-card-hover:hover {
+  border-color: rgba(56, 189, 248, 0.2);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.06);
+}
+
+.glass-panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(16px);
+}
+
+/* ============ GLOW EFFECTS ============ */
+.glow-cyan {
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.15), 0 0 30px rgba(56, 189, 248, 0.05);
+}
+
+.glow-teal {
+  box-shadow: 0 0 15px rgba(14, 165, 233, 0.2), 0 0 30px rgba(14, 165, 233, 0.08);
+}
+
+.glow-red {
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+}
+
+.glow-green {
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.15);
+}
+
+.text-glow-cyan {
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+}
+
+/* ============ STATUS INDICATOR ============ */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  position: relative;
+}
+.status-dot::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  animation: pulse-ring 2s ease-in-out infinite;
+}
+.status-dot.online {
+  background: #22c55e;
+}
+.status-dot.online::before {
+  border: 2px solid rgba(34, 197, 94, 0.3);
+}
+
+@keyframes pulse-ring {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.5); }
+}
+
+/* ============ ANIMATIONS ============ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out forwards;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent 25%, rgba(56, 189, 248, 0.08) 50%, transparent 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ============ MAP OVERRIDES ============ */
+.leaflet-container {
+  background: #0a0e1a !important;
+  font-family: 'Inter', sans-serif !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.leaflet-control-zoom {
+  border: 1px solid rgba(56, 189, 248, 0.15) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.leaflet-control-zoom a {
+  background: rgba(15, 21, 38, 0.9) !important;
+  color: #94a3b8 !important;
+  border-color: rgba(56, 189, 248, 0.1) !important;
+  width: 30px !important;
+  height: 30px !important;
+  line-height: 30px !important;
+  font-size: 14px !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: rgba(30, 42, 66, 0.95) !important;
+  color: #38bdf8 !important;
+}
+
+.leaflet-control-attribution {
+  background: rgba(15, 21, 38, 0.8) !important;
+  color: #475569 !important;
+  font-size: 9px !important;
+  border-radius: 4px 0 0 0 !important;
+}
+
+.leaflet-control-attribution a {
+  color: #38bdf8 !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: rgba(15, 21, 38, 0.95) !important;
+  border: 1px solid rgba(56, 189, 248, 0.2) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 15px rgba(56, 189, 248, 0.1) !important;
+  color: #e2e8f0 !important;
+  padding: 0 !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+}
+
+.leaflet-popup-tip {
+  background: rgba(15, 21, 38, 0.95) !important;
+  border: 1px solid rgba(56, 189, 248, 0.2) !important;
+  box-shadow: none !important;
+}
+
+.leaflet-popup-close-button {
+  color: #64748b !important;
+  font-size: 16px !important;
+  padding: 6px 8px 0 0 !important;
+}
+.leaflet-popup-close-button:hover {
+  color: #38bdf8 !important;
+}
+
+/* ============ RISK BADGE COLORS ============ */
+.risk-low { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
+.risk-medium { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
+.risk-high { background: rgba(249, 115, 22, 0.15); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.2); }
+.risk-critical { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+/* ============ METRIC CARD ============ */
+.metric-value {
+  font-family: 'JetBrains Mono', 'Inter', monospace;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* ============ AI LOADING ============ */
+@keyframes typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+.ai-step-text {
+  overflow: hidden;
+  white-space: nowrap;
+  animation: typewriter 0.8s steps(30) forwards;
+}
+
+/* ============ CHART OVERRIDES ============ */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: rgba(56, 189, 248, 0.06) !important;
+}
+.recharts-text {
+  fill: #64748b !important;
+  font-size: 10px !important;
+}
+
+/* ============ NAV ITEM ============ */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+.nav-item:hover {
+  background: rgba(56, 189, 248, 0.06);
+  color: #cbd5e1;
+}
+.nav-item.active {
+  background: rgba(56, 189, 248, 0.1);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.15);
+  font-weight: 600;
+}
+
+/* ============ PROGRESS BAR ============ */
+.progress-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(56, 189, 248, 0.1);
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
