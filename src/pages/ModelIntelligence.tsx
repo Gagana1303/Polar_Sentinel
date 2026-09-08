@@ -6,6 +6,7 @@ import { trajectoryPredictionService } from '../services/trajectoryPredictionSer
 import { routeOptimizationService } from '../services/routeOptimizationService';
 import { dataIngestionService } from '../services/dataIngestionService';
 import { useAppStore } from '../store/useAppStore';
+import { CustomRoutePlanner } from '../components/navigation/CustomRoutePlanner';
 
 export const ModelIntelligencePage: React.FC = () => {
   const { icebergs, vessel, environment } = useAppStore();
@@ -42,8 +43,8 @@ export const ModelIntelligencePage: React.FC = () => {
   // Run A* Route Optimization Live
   const handleRunRouteOptimizer = () => {
     const ice = icebergs[0];
-    const routes = routeOptimizationService.getOptimizedRoutes();
-    const route = routes.find((r) => r.code === selectedRouteCode) || routes[0];
+    const routes: any[] = routeOptimizationService.getOptimizedRoutes();
+    const route = routes.find((r: any) => r.code === selectedRouteCode) || routes[0];
     const risk = routeOptimizationService.evaluateRouteRisk(ice, vessel, route, 18, environment);
     setCalculatedRisk(risk);
   };
@@ -327,6 +328,11 @@ export const ModelIntelligencePage: React.FC = () => {
               <div className="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-400">
                 ✅ Verification: A* graph search verifies Route C gives -68% iceberg exposure.
               </div>
+            </div>
+
+            {/* Custom Origin & Destination Planner Live Widget */}
+            <div className="col-span-1 md:col-span-2 pt-2">
+              <CustomRoutePlanner />
             </div>
           </div>
         )}

@@ -13,6 +13,7 @@ import {
   Compass,
   Wifi,
   Activity,
+  Cpu,
 } from 'lucide-react';
 
 interface NavItem {
@@ -35,6 +36,7 @@ export const Sidebar: React.FC = () => {
     { id: 'navigation', label: 'Risk & Navigation', icon: <Navigation2 size={16} />, badge: 'AI', badgeColor: '#0ea5e9' },
     { id: 'sea-ice', label: 'Sea-Ice Monitor', icon: <Snowflake size={16} /> },
     { id: 'ai-predictions', label: 'AI Predictions', icon: <BrainCircuit size={16} /> },
+    { id: 'model-intelligence', label: 'Algorithm Inspector', icon: <Cpu size={16} />, badge: 'CODE', badgeColor: '#8b5cf6' },
     { id: 'alerts', label: 'Alerts', icon: <Bell size={16} />, badge: String(notifications.length), badgeColor: highRiskCount > 0 ? '#ef4444' : '#f59e0b' },
     { id: 'analytics', label: 'Analytics', icon: <BarChart3 size={16} /> },
   ];

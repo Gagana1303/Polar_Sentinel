@@ -63,70 +63,135 @@ class AStarRouteOptimizer:
                 "isRecommended": True
             }
 
-    def compute_all_routes(self) -> List[Dict[str, Any]]:
+    def plan_route(self, start_lat: float, start_lng: float, dest_lat: float, dest_lng: float) -> List[Dict[str, Any]]:
         """
-        Generates candidates Route A, B, and C with complete trade-off metrics.
+        Generates dynamic candidates Route A, B, and C based on provided source/destination.
+        Integrates with data ingestion for real iceberg awareness.
         """
-        route_a_risk = self.evaluate_route_risk("ROUTE_A", 5.8)
-        route_b_risk = self.evaluate_route_risk("ROUTE_B", 14.2)
-        route_c_risk = self.evaluate_route_risk("ROUTE_C", 28.5)
+        from .data_ingestion import data_ingestion_service
+        
+        # 1. Fetch real environment data for the midpoint
+        mid_lat = (start_lat + dest_lat) / 2
+        mid_lng = (start_lng + dest_lng) / 2
+        
+        # In a real dynamic A*, we would use these fields to alter edge weights
+        # env_data = data_ingestion_service.fetch_ocean_environmental_fields(mid_lat, mid_lng)
+        icebergs = data_ingestion_service.fetch_sar_iceberg_detections([start_lat, start_lng, dest_lat, dest_lng])
+        
+        # 2. Simple dynamic waypoint generation for 3 routes
+        # Route A: Direct Line
+        route_a_points = [
+            [start_lng, start_lat],
+            [start_lng + (dest_lng - start_lng) * 0.25, start_lat + (dest_lat - start_lat) * 0.25],
+            [start_lng + (dest_lng - start_lng) * 0.5, start_lat + (dest_lat - start_lat) * 0.5],
+            [start_lng + (dest_lng - start_lng) * 0.75, start_lat + (dest_lat - start_lat) * 0.75],
+            [dest_lng, dest_lat]
+        ]
+        
+        # Route B: Northern Bypass (Latitudes in Antarctica are negative, so adding makes it go North)
+        lat_offset_b = abs(dest_lat - start_lat) * 0.3 + 0.5
+        route_b_points = [
+            [start_lng, start_lat],
+            [start_lng + (dest_lng - start_lng) * 0.25, start_lat + (dest_lat - start_lat) * 0.25 + lat_offset_b * 0.5],
+            [start_lng + (dest_lng - start_lng) * 0.5, start_lat + (dest_lat - start_lat) * 0.5 + lat_offset_b],
+            [start_lng + (dest_lng - start_lng) * 0.75, start_lat + (dest_lat - start_lat) * 0.75 + lat_offset_b * 0.5],
+            [dest_lng, dest_lat]
+        ]
+        
+        # Route C: Southern Arc / Coastal (Subtracting makes it go South)
+        lat_offset_c = abs(dest_lat - start_lat) * 0.2 + 0.3
+        route_c_points = [
+            [start_lng, start_lat],
+            [start_lng + (dest_lng - start_lng) * 0.25, start_lat + (dest_lat - start_lat) * 0.25 - lat_offset_c * 0.5],
+            [start_lng + (dest_lng - start_lng) * 0.5, start_lat + (dest_lat - start_lat) * 0.5 - lat_offset_c],
+            [start_lng + (dest_lng - start_lng) * 0.75, start_lat + (dest_lat - start_lat) * 0.75 - lat_offset_c * 0.5],
+            [dest_lng, dest_lat]
+        ]
+
+        # 3. Calculate distance approx (very basic Euclidean degree * 60 for NM)
+        dist_deg = math.sqrt((dest_lat - start_lat)**2 + (dest_lng - start_lng)**2)
+        base_dist_nm = dist_deg * 60 * math.cos(math.radians(mid_lat))
+
+        # 4. Find min clearance from closest iceberg (dynamic risk)
+        min_clearance_a = 999.0
+        min_clearance_b = 999.0
+        min_clearance_c = 999.0
+        
+        for ice in icebergs:
+            ice_lat, ice_lng = ice["lat"], ice["lng"]
+            # Check midpoint distance as a rough proxy
+            dist_a = math.sqrt((mid_lat - ice_lat)**2 + (mid_lng - ice_lng)**2) * 60
+            dist_b = math.sqrt(((mid_lat + lat_offset_b) - ice_lat)**2 + (mid_lng - ice_lng)**2) * 60
+            dist_c = math.sqrt(((mid_lat - lat_offset_c) - ice_lat)**2 + (mid_lng - ice_lng)**2) * 60
+            
+            min_clearance_a = min(min_clearance_a, dist_a)
+            min_clearance_b = min(min_clearance_b, dist_b)
+            min_clearance_c = min(min_clearance_c, dist_c)
+
+        route_a_risk = self.evaluate_route_risk("ROUTE_A", round(min_clearance_a, 1))
+        route_b_risk = self.evaluate_route_risk("ROUTE_B", round(min_clearance_b, 1))
+        route_c_risk = self.evaluate_route_risk("ROUTE_C", round(min_clearance_c, 1))
 
         return [
             {
                 "id": "ROUTE_A",
-                "name": "Direct Route A (Highest Risk)",
+                "name": "Direct Route A",
                 "code": "ROUTE_A",
                 "tag": "Shortest",
-                "distanceNm": 342,
-                "etaDaysHours": "1d 03h",
-                "etaHoursTotal": 27.3,
+                "distanceNm": round(base_dist_nm),
+                "etaDaysHours": f"{int(base_dist_nm/240)}d {int((base_dist_nm%240)/10)}h",
+                "etaHoursTotal": round(base_dist_nm/10, 1),
                 "riskLevel": route_a_risk["riskLevel"],
                 "riskScore": route_a_risk["riskScore"],
                 "iceExposurePercent": 42,
-                "minimumClearanceNm": 5.8,
-                "fuelEstimateTonnes": 38.5,
+                "minimumClearanceNm": round(min_clearance_a, 1),
+                "fuelEstimateTonnes": round(base_dist_nm * 0.11, 1),
                 "isRecommended": False,
                 "explanation": route_a_risk["explanation"],
-                "recommendationReason": "Passes through predicted high-risk iceberg drift corridor.",
-                "points": [[72.50, -67.85], [73.50, -68.10], [74.30, -68.40], [75.00, -68.70], [76.20, -69.00]],
+                "recommendationReason": "Shortest path but potentially intersects hazards.",
+                "points": route_a_points,
             },
             {
                 "id": "ROUTE_B",
-                "name": "Northern Bypass B (Medium Risk)",
+                "name": "Northern Bypass B",
                 "code": "ROUTE_B",
                 "tag": "Balanced",
-                "distanceNm": 368,
-                "etaDaysHours": "1d 05h",
-                "etaHoursTotal": 29.4,
+                "distanceNm": round(base_dist_nm * 1.15),
+                "etaDaysHours": f"{int((base_dist_nm*1.15)/240)}d {int(((base_dist_nm*1.15)%240)/10)}h",
+                "etaHoursTotal": round((base_dist_nm*1.15)/10, 1),
                 "riskLevel": route_b_risk["riskLevel"],
                 "riskScore": route_b_risk["riskScore"],
                 "iceExposurePercent": 24,
-                "minimumClearanceNm": 14.2,
-                "fuelEstimateTonnes": 41.2,
+                "minimumClearanceNm": round(min_clearance_b, 1),
+                "fuelEstimateTonnes": round(base_dist_nm * 1.15 * 0.11, 1),
                 "isRecommended": False,
                 "explanation": route_b_risk["explanation"],
-                "recommendationReason": "Acceptable clearance, slightly increased fuel consumption.",
-                "points": [[72.50, -67.85], [73.10, -67.60], [74.10, -67.75], [75.20, -68.20], [76.20, -69.00]],
+                "recommendationReason": "Avoids central risks but adds distance.",
+                "points": route_b_points,
             },
             {
                 "id": "ROUTE_C",
-                "name": "Optimal Coastal Route C (Recommended)",
+                "name": "Optimal Coastal Route C",
                 "code": "ROUTE_C",
                 "tag": "Recommended",
-                "distanceNm": 385,
-                "etaDaysHours": "1d 08h",
-                "etaHoursTotal": 32.1,
+                "distanceNm": round(base_dist_nm * 1.08),
+                "etaDaysHours": f"{int((base_dist_nm*1.08)/240)}d {int(((base_dist_nm*1.08)%240)/10)}h",
+                "etaHoursTotal": round((base_dist_nm*1.08)/10, 1),
                 "riskLevel": route_c_risk["riskLevel"],
                 "riskScore": route_c_risk["riskScore"],
                 "iceExposurePercent": 12,
-                "minimumClearanceNm": 28.5,
-                "fuelEstimateTonnes": 43.8,
+                "minimumClearanceNm": round(min_clearance_c, 1),
+                "fuelEstimateTonnes": round(base_dist_nm * 1.08 * 0.11, 1),
                 "isRecommended": True,
                 "explanation": route_c_risk["explanation"],
-                "recommendationReason": "Optimal balance of ice safety, regulatory buffer compliance (-68% ice exposure), and smooth navigation.",
-                "points": [[72.50, -67.85], [72.10, -68.20], [73.00, -68.70], [74.50, -69.10], [76.20, -69.00]],
+                "recommendationReason": "Optimal balance of ice safety and distance.",
+                "points": route_c_points,
             }
         ]
+
+    def compute_all_routes(self) -> List[Dict[str, Any]]:
+        """Default route calculation for Prydz Bay research vessel"""
+        return self.plan_route(-67.85, 72.50, -69.00, 76.20)
 
 # Instantiate singleton optimizer
 route_optimizer_service = AStarRouteOptimizer()

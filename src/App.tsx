@@ -10,6 +10,7 @@ import { AIPredictionsPage } from './pages/AIPredictions';
 import { AlertsPage } from './pages/Alerts';
 import { AnalyticsPage } from './pages/Analytics';
 import { SettingsPage } from './pages/Settings';
+import { ModelIntelligencePage } from './pages/ModelIntelligence';
 
 export function App() {
   const { activeTab } = useAppStore();
@@ -28,6 +29,8 @@ export function App() {
         return <SeaIcePage />;
       case 'ai-predictions':
         return <AIPredictionsPage />;
+      case 'model-intelligence':
+        return <ModelIntelligencePage />;
       case 'alerts':
         return <AlertsPage />;
       case 'analytics':

@@ -40,6 +40,7 @@ interface AppStore {
   selectedRouteId: string;
   selectRoute: (id: string) => void;
   recalculateRoutes: () => void;
+  setCustomRoutes: (routes: RouteOption[], selectedId?: string) => void;
 
   riskAssessment: DetailedRiskAssessment;
   environment: EnvironmentalConditions;
@@ -215,6 +216,33 @@ export const useAppStore = create<AppStore>((set, get) => ({
         ...get().vessel,
         currentRiskScore: newRisk.overallScore,
         safetyStatus: newRisk.riskLevel,
+      },
+    });
+  },
+
+  setCustomRoutes: (routes: RouteOption[], selectedId?: string) => {
+    const safest = routes.find(r => r.isRecommended) || routes.reduce((min, r) => r.riskScore < min.riskScore ? r : min, routes[0]);
+    const targetId = selectedId || safest?.id || routes[0]?.id;
+    const activeRoute = routes.find(r => r.id === targetId) || routes[0];
+    const icebergs = get().icebergs;
+    const selectedIce = icebergs.find((i) => i.id === get().selectedIcebergId) || icebergs[0];
+    const newRisk = computeDynamicRiskAssessment(
+      selectedIce,
+      get().vessel,
+      activeRoute,
+      get().simulationTimeOffset,
+      get().environment
+    );
+
+    set({
+      routes,
+      selectedRouteId: targetId,
+      riskAssessment: newRisk,
+      vessel: {
+        ...get().vessel,
+        activeRouteId: targetId,
+        currentRiskScore: activeRoute.riskScore,
+        safetyStatus: activeRoute.riskLevel,
       },
     });
   },

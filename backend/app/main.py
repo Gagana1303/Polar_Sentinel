@@ -42,6 +42,12 @@ class RiskAnalysisRequest(BaseModel):
     icebergId: str = "ICE-A17"
     timeOffsetHours: float = 0
 
+class PlanRouteRequest(BaseModel):
+    startLat: float = -67.85
+    startLng: float = 72.50
+    destLat: float = -69.00
+    destLng: float = 76.20
+
 @app.get("/")
 def read_root():
     return {
@@ -110,3 +116,20 @@ def analyze_risk(req: RiskAnalysisRequest):
     """
     clearance = 5.8 if req.routeId == "ROUTE_A" else (14.2 if req.routeId == "ROUTE_B" else 28.5)
     return route_optimizer_service.evaluate_route_risk(req.routeId, clearance)
+
+@app.post("/api/routes/plan")
+def plan_custom_route(req: PlanRouteRequest):
+    """
+    Dynamic Route Planning: Generates routes based on custom Source & Destination coordinates,
+    evaluating real iceberg clearance and identifying the safest route.
+    """
+    routes = route_optimizer_service.plan_route(req.startLat, req.startLng, req.destLat, req.destLng)
+    safest = min(routes, key=lambda r: r.get("riskScore", 999))
+    return {
+        "routes": routes,
+        "safestRoute": safest,
+        "count": len(routes),
+        "source": {"lat": req.startLat, "lng": req.startLng},
+        "destination": {"lat": req.destLat, "lng": req.destLng}
+    }
+

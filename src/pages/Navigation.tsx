@@ -2,6 +2,7 @@ import React from 'react';
 import { useAppStore } from '../store/useAppStore';
 import { AntarcticMap } from '../components/map/AntarcticMap';
 import { Ship, Navigation2, ShieldAlert, Fuel, Clock, Target, Route, ArrowRight, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { CustomRoutePlanner } from '../components/navigation/CustomRoutePlanner';
 
 const RISK_COLORS: Record<string, string> = {
   low: '#22c55e', medium: '#f59e0b', high: '#f97316', critical: '#ef4444',
@@ -99,6 +100,9 @@ export const NavigationPage: React.FC = () => {
         background: 'rgba(10,14,26,0.6)',
         display: 'flex', flexDirection: 'column', gap: 12,
       }}>
+        {/* Dynamic Custom Route Planner */}
+        <CustomRoutePlanner />
+
         {/* Current Vessel */}
         <div className="glass-card" style={{ padding: 16 }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: '#64748b', letterSpacing: '0.12em', marginBottom: 12 }}>
