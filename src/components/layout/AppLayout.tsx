@@ -1,6 +1,7 @@
 import React from 'react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
+import { CinematicDemoOverlay } from './CinematicDemoOverlay';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -29,6 +30,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           {children}
         </main>
       </div>
+      <CinematicDemoOverlay />
     </div>
   );
 };
+

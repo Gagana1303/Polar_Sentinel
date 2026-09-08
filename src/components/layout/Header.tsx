@@ -128,7 +128,10 @@ export const Header: React.FC = () => {
 
         {/* Demo Mode Button */}
         <button
-          onClick={runFullSihDemo}
+          onClick={() => {
+            setPresentationMode(true);
+            runFullSihDemo();
+          }}
           style={{
             display: 'flex',
             alignItems: 'center',
